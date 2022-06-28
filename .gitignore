@@ -1,4 +1,6 @@
 RawDatasetsPreprocessing/StanfordCarsDataset/cars_test/*
 RawDatasetsPreprocessing/StanfordCarsDataset/cars_train/*
+RawDatasetsPreprocessing/CompCars/*
+RawDatasetsPreprocessing/DVM/*
 
 .ipynb_checkpoints

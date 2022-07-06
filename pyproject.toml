@@ -12,6 +12,7 @@ jupyter = "^1.0.0"
 helper = "^2.5.0"
 pynvml = "^11.4.1"
 wandb = "^0.12.18"
+wget = "^3.2"
 
 [tool.poetry.dev-dependencies]
 

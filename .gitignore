@@ -4,3 +4,5 @@ RawDatasetsPreprocessing/CompCars/*
 RawDatasetsPreprocessing/DVM/*
 
 .ipynb_checkpoints
+/outputs/
+/tmp/

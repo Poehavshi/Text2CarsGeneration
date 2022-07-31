@@ -32,7 +32,7 @@ class WebDatasetSource(AbstractSource):
 
 
 if __name__ == '__main__':
-    initialize(config_path="..\..\..\conf", job_name="test_app", version_base=None)
+    initialize(config_path=r"..\..\..\conf", job_name="test_app", version_base=None)
     cfg = compose(config_name="config")
     test_source = WebDatasetSource(
         ["http://ai.stanford.edu/~jkrause/car196/car_ims.tgz", "http://ai.stanford.edu/~jkrause/car196/cars_annos.mat"],

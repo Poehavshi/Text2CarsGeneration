@@ -2,7 +2,8 @@
 Classes to decompress files to cache folder
 perform ordering of all files - separate meta and image files
 """
-
+import glob
+import shutil
 from abc import ABC, abstractmethod
 import os
 import tarfile
@@ -31,7 +32,10 @@ class AbstractDecompressor(ABC):
 
 class TarDecompressor(AbstractDecompressor):
     def order(self):
-        pass
+        for file in glob.iglob(os.path.join(self.folder_with_data, "*.jpg")):
+            shutil.move(file, self.folder_to_save_images)
+        for file in glob.iglob(os.path.join(self.folder_with_data, "*.png")):
+            shutil.move(file, self.folder_to_save_images)
 
     def decompress(self):
         for path, directories, files in os.walk(self.folder_with_data):

@@ -5,7 +5,7 @@ description = ""
 authors = ["Sotnikov Arkadiy <cotnikoarkady@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "3.10.*"
+python = "^3.10"
 matplotlib = "^3.5.2"
 scipy = "^1.8.1"
 jupyter = "^1.0.0"
@@ -14,6 +14,9 @@ pynvml = "^11.4.1"
 wandb = "^0.12.18"
 wget = "^3.2"
 hydra-core = "^1.2.0"
+torch = "^1.13.1"
+torchvision = "^0.14.1"
+pandas = "^1.5.2"
 
 [tool.poetry.dev-dependencies]
 

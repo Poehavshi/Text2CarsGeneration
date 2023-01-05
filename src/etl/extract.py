@@ -62,7 +62,7 @@ class DownloadGoogleDriveOperator(ExtractOperator):
 EXTRACT_OPERATOR_INJECTOR = {
     "compcars": DownloadGoogleDriveOperator,
     "stanford": DownloadUrlOperator,
-    "dvmcar": DownloadUrlOperator
+    "resized_DVM": DownloadUrlOperator
 }
 
 

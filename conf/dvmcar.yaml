@@ -6,5 +6,5 @@ raw_data_root: '${data_root}/datasets'
 
 datasets:
   dvmcar:
-    name: "dvmcar"
+    name: "resized_DVM"
     urls: ["https://figshare.com/ndownloader/files/34792453"]

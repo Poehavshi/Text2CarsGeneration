@@ -4,11 +4,11 @@ Module to transform images (resizing, filtering, synthesis images creation)
 import logging
 import os
 from abc import ABC, abstractmethod
+from tqdm import tqdm
 
 from hydra import initialize, compose
 from scipy.io import loadmat
 import pandas as pd
-
 
 log = logging.getLogger(__name__)
 
@@ -17,6 +17,7 @@ class TransformOperator(ABC):
     """
     Operator for transform operations performed on the whole dataset
     """
+
     def __init__(self, input_dir, delete_old_meta=False):
         self.input_dir = input_dir
         self.delete_old_meta = delete_old_meta
@@ -60,7 +61,7 @@ class StanfordTransform(TransformOperator):
         class_names = class_names.flatten()
         enumerated_classes = []
         for class_index, class_name in enumerate(class_names):
-            enumerated_classes.append({"class_index": class_index+1, "class_name": class_name[0]})
+            enumerated_classes.append({"class_index": class_index + 1, "class_name": class_name[0]})
         return pd.DataFrame(enumerated_classes)
 
     @staticmethod
@@ -99,13 +100,14 @@ class CompCarsTransform(TransformOperator):
         mapping = {}
         for index, class_name in enumerate(mat_array):
             if len(class_name[0]):
-                mapping[index+1] = class_name[0][0]
+                mapping[index + 1] = class_name[0][0]
             else:
-                mapping[index+1] = ''
+                mapping[index + 1] = ''
         return mapping
 
     def create_meta_df_for_data(self, make_names_mapping, model_names_mapping) -> pd.DataFrame:
         # TODO add information about attributes (door number, seat_number and car type)
+        # todo add information about viewpoint (from label directory)
         img_dir = os.path.join(self.input_dir, "data/image")
         df_dicts = []
         for root, subdirectories, files in os.walk(img_dir):
@@ -145,7 +147,7 @@ class CompCarsTransform(TransformOperator):
         for index, make_model_name in enumerate(make_model_names):
             brand = make_model_name[0][0].strip()
             model_name = make_model_name[1][0].replace(brand, '').strip()
-            class_index = index+1
+            class_index = index + 1
             mapping[class_index] = ' '.join([brand, model_name])
         return mapping
 
@@ -158,18 +160,31 @@ class CompCarsTransform(TransformOperator):
 class DVMCarTransform(TransformOperator):
 
     def do(self):
-        pass
+        meta_df = self.create_meta_df()
+        print(meta_df)
+        meta_df.to_csv(os.path.join(self.input_dir, "normalized_meta.csv"), index=False)
+
+    def create_meta_df(self):
+        df_dicts = []
+        for root, subdirectories, files in tqdm(os.walk(self.input_dir), "Processing DVM file structure"):
+            for file in files:
+                if file != 'normalized_meta.csv':
+                    brand, model, year, color = root.split('\\')[-4:]
+                    caption = ' '.join([color, brand, model, year])
+                    fpath = os.path.join(brand, model, year, color, file)
+                    df_dicts.append({'fpath': fpath, 'caption': caption})
+        return pd.DataFrame(df_dicts)
 
 
 TRANSFORM_OPERATOR_INJECTOR = {
     "stanford": StanfordTransform,
     "compcars": CompCarsTransform,
-    "dvmcar": DVMCarTransform
+    "resized_DVM": DVMCarTransform
 }
 
 if __name__ == '__main__':
-    initialize(config_path=r"..\..\conf", job_name="compcars_extract", version_base=None)
-    cfg = compose(config_name="compcars")
+    initialize(config_path=r"..\..\conf", job_name="dvmcars_extract", version_base=None)
+    cfg = compose(config_name="dvmcar")
     root_input_dir = cfg.raw_data_root
     for dataset in cfg.datasets:
         dataset_name = cfg.datasets[dataset].name

@@ -2,7 +2,8 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from typing import List
-from torchvision.datasets.utils import download_url, download_and_extract_archive, download_file_from_google_drive
+from torchvision.datasets.utils import download_url, download_and_extract_archive, download_file_from_google_drive, \
+    extract_archive
 from hydra import initialize, compose
 import zipfile
 
@@ -49,26 +50,30 @@ class DownloadGoogleDriveOperator(ExtractOperator):
     def __init__(self, dataset_config, output_directory: str):
         super().__init__(dataset_config, output_directory)
         self.filenames = dataset_config.filenames
-        self.zip_password = dataset_config.archive_password
 
     def do(self):
         for url, filename in zip(self.input_urls, self.filenames):
             self.download_file(url, filename)
 
     def download_file(self, url, filename):
-        download_file_from_google_drive(file_id=url, root=self.output_dir, filename=filename)
+        root = self.output_dir
+        download_file_from_google_drive(file_id=url, root=root, filename=filename)
+        if filename.endswith(".rar"):
+            extract_archive(from_path=os.path.join(root, filename), to_path=root, remove_finished=True)
+
 
 # todo move to another file
 EXTRACT_OPERATOR_INJECTOR = {
     "compcars": DownloadGoogleDriveOperator,
     "stanford": DownloadUrlOperator,
-    "resized_DVM": DownloadUrlOperator
+    "resized_DVM": DownloadUrlOperator,
+    "carconnection": DownloadGoogleDriveOperator
 }
 
 
 if __name__ == '__main__':
-    initialize(config_path=r"..\..\conf", job_name="stanford_extract", version_base=None)
-    cfg = compose(config_name="dvmcar")
+    initialize(config_path=r"..\..\conf", job_name="carconnection_extract", version_base=None)
+    cfg = compose(config_name="carconnection")
     root_path = cfg.raw_data_root
     for dataset in cfg.datasets:
         dataset_name = cfg.datasets[dataset].name

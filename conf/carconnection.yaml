@@ -1,0 +1,11 @@
+# Here all datasets properties and other things
+
+cache_folder: "./tmp"
+data_root: 'E:/University/НИР/Project/src/etl'
+raw_data_root: '${data_root}/datasets'
+
+datasets:
+  dvmcar:
+    name: "carconnection"
+    urls: ["1TQQuT60bddyeGBVfwNOk6nxYavxQdZJD"]
+    filenames: ["carconnection.rar"]

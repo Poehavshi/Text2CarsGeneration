@@ -2,11 +2,12 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from typing import List
-from torchvision.datasets.utils import download_url, download_and_extract_archive
-import glob
+from torchvision.datasets.utils import download_url, download_and_extract_archive, download_file_from_google_drive
 from hydra import initialize, compose
+import zipfile
 
 log = logging.getLogger(__name__)
+
 
 class ExtractOperator(ABC):
     """
@@ -16,10 +17,11 @@ class ExtractOperator(ABC):
     First type is download ready-to-use dataset from some source
     Second type is parser from some website
     """
+
     def __init__(self,
-                 urls: List[str],
+                 dataset_config,
                  output_directory: str):
-        self.input_urls = urls
+        self.input_urls = dataset_config.urls
         self.output_dir = output_directory
 
     @abstractmethod
@@ -31,33 +33,49 @@ def _is_archive(url):
     return url.endswith(".tgz") or url.endswith(".tar.gz")
 
 
-class DownloadOperator(ExtractOperator):
+class DownloadUrlOperator(ExtractOperator):
     def do(self):
         for url in self.input_urls:
             self.download_file(url)
 
     def download_file(self, url):
         if _is_archive(url):
-            self.download_archive(url)
+            download_and_extract_archive(url, self.output_dir, remove_finished=True)
         else:
             download_url(url, self.output_dir)
-    def download_archive(self, url):
-        download_and_extract_archive(url, self.output_dir)
-        for file in glob.glob(os.path.join(self.output_dir, "*.tgz")):
-            log.info(f"Delete archive with name: {file}")
-            os.remove(file)
+
+
+class DownloadGoogleDriveOperator(ExtractOperator):
+    def __init__(self, dataset_config, output_directory: str):
+        super().__init__(dataset_config, output_directory)
+        self.filenames = dataset_config.filenames
+        self.zip_password = dataset_config.archive_password
+
+    def do(self):
+        for url, filename in zip(self.input_urls, self.filenames):
+            self.download_file(url, filename)
+
+    def download_file(self, url, filename):
+        download_file_from_google_drive(file_id=url, root=self.output_dir, filename=filename)
+
+# todo move to another file
+EXTRACT_OPERATOR_INJECTOR = {
+    "compcars": DownloadGoogleDriveOperator,
+    "stanford": DownloadUrlOperator,
+    "dvmcar": DownloadUrlOperator
+}
 
 
 if __name__ == '__main__':
     initialize(config_path=r"..\..\conf", job_name="stanford_extract", version_base=None)
-    cfg = compose(config_name="stanford")
+    cfg = compose(config_name="dvmcar")
     root_path = cfg.raw_data_root
     for dataset in cfg.datasets:
         dataset_name = cfg.datasets[dataset].name
         dataset_path = os.path.join(root_path, dataset_name)
 
-        extract_operator = DownloadOperator(
-            cfg.datasets[dataset].urls,
+        extract_operator = EXTRACT_OPERATOR_INJECTOR[dataset_name](
+            cfg.datasets[dataset],
             dataset_path
         )
         extract_operator.do()

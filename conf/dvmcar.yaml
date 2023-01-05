@@ -1,0 +1,10 @@
+# Here all datasets properties and other things
+
+cache_folder: "./tmp"
+data_root: 'E:/University/НИР/Project/src/etl'
+raw_data_root: '${data_root}/datasets'
+
+datasets:
+  dvmcar:
+    name: "dvmcar"
+    urls: ["https://figshare.com/ndownloader/files/34792453"]

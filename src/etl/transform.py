@@ -185,8 +185,9 @@ class CarConnectionTransform(TransformOperator):
         super().__init__(input_dir, delete_old_meta)
         # Step 1: Initialize model with the best available weights
         weights = ResNet50_Weights.DEFAULT
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.model = resnet50(weights=weights)
-        self.model.eval()
+        self.model.eval().to(self.device)
 
         # Step 2: Initialize the inference transforms
         self.preprocess = weights.transforms()
@@ -194,7 +195,7 @@ class CarConnectionTransform(TransformOperator):
     def is_car_image(self, image_path):
         img = read_image(image_path)
         # Step 3: Apply inference preprocessing transforms
-        batch = self.preprocess(img).unsqueeze(0)
+        batch = self.preprocess(img).unsqueeze(0).to(self.device)
 
         # Step 4: Use the model and print the predicted category
         prediction = self.model(batch).squeeze(0).softmax(0)
@@ -215,8 +216,8 @@ class CarConnectionTransform(TransformOperator):
                 brand, model, year = file.split('_')[:3]
                 caption = ' '.join([brand, model, year])
                 fpath = os.path.join("data", file)
-                # if self.is_car_image(os.path.join(self.input_dir, fpath)):
-                df_dicts.append({'fpath': fpath, 'caption': caption})
+                if self.is_car_image(os.path.join(self.input_dir, fpath)):
+                    df_dicts.append({'fpath': fpath, 'caption': caption})
         return pd.DataFrame(df_dicts)
 
 

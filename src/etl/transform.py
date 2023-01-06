@@ -5,6 +5,8 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from tqdm import tqdm
+from torchvision.io import read_image
+from torchvision.models import resnet50, ResNet50_Weights
 
 from hydra import initialize, compose
 from scipy.io import loadmat
@@ -176,21 +178,65 @@ class DVMCarTransform(TransformOperator):
         return pd.DataFrame(df_dicts)
 
 
+class CarConnectionTransform(TransformOperator):
+    RESNET_CAR_IDX = {656, 627, 817, 511, 468, 751, 705, 757, 717, 734, 654, 675, 864, 609, 436}
+
+    def __init__(self, input_dir, delete_old_meta=False):
+        super().__init__(input_dir, delete_old_meta)
+        # Step 1: Initialize model with the best available weights
+        weights = ResNet50_Weights.DEFAULT
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.model = resnet50(weights=weights)
+        self.model.eval().to(self.device)
+
+        # Step 2: Initialize the inference transforms
+        self.preprocess = weights.transforms()
+
+    def is_car_image(self, image_path):
+        img = read_image(image_path)
+        # Step 3: Apply inference preprocessing transforms
+        batch = self.preprocess(img).unsqueeze(0).to(self.device)
+
+        # Step 4: Use the model and print the predicted category
+        prediction = self.model(batch).squeeze(0).softmax(0)
+        class_id = prediction.argmax().item()
+
+        return class_id in CarConnectionTransform.RESNET_CAR_IDX
+
+    def do(self):
+        meta_df = self.create_meta_df()
+        print(meta_df)
+        meta_df.to_csv(os.path.join(self.input_dir, "normalized_meta.csv"), index=False)
+
+    def create_meta_df(self):
+        df_dicts = []
+        img_dir = os.path.join(self.input_dir, "data")
+        for root, subdirectories, files in tqdm(os.walk(img_dir), "Processing CarConnection file structure"):
+            for file in files:
+                brand, model, year = file.split('_')[:3]
+                caption = ' '.join([brand, model, year])
+                fpath = os.path.join("data", file)
+                if self.is_car_image(os.path.join(self.input_dir, fpath)):
+                    df_dicts.append({'fpath': fpath, 'caption': caption})
+        return pd.DataFrame(df_dicts)
+
+
 TRANSFORM_OPERATOR_INJECTOR = {
     "stanford": StanfordTransform,
     "compcars": CompCarsTransform,
-    "resized_DVM": DVMCarTransform
+    "resized_DVM": DVMCarTransform,
+    "carconnection": CarConnectionTransform
 }
 
 if __name__ == '__main__':
-    initialize(config_path=r"..\..\conf", job_name="dvmcars_extract", version_base=None)
-    cfg = compose(config_name="dvmcar")
+    initialize(config_path=r"..\..\conf", job_name="carconnection_transform", version_base=None)
+    cfg = compose(config_name="carconnection")
     root_input_dir = cfg.raw_data_root
     for dataset in cfg.datasets:
         dataset_name = cfg.datasets[dataset].name
         dataset_input_dir = os.path.join(root_input_dir, dataset_name)
 
-        extract_operator = TRANSFORM_OPERATOR_INJECTOR[dataset_name](
+        transform_operator = TRANSFORM_OPERATOR_INJECTOR[dataset_name](
             dataset_input_dir
         )
-        extract_operator.do()
+        transform_operator.do()

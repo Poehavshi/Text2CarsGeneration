@@ -14,11 +14,11 @@ pynvml = "^11.4.1"
 wandb = "^0.12.18"
 wget = "^3.2"
 hydra-core = "^1.2.0"
-torch = "^1.13.1"
 torchvision = "^0.14.1"
 pandas = "^1.5.2"
 tqdm = "^4.64.1"
 validators = "^0.20.0"
+pefile = "^2022.5.30"
 
 [tool.poetry.dev-dependencies]
 

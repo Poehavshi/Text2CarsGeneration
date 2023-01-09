@@ -7,6 +7,7 @@ from abc import ABC, abstractmethod
 from tqdm import tqdm
 from torchvision.io import read_image
 from torchvision.models import resnet50, ResNet50_Weights
+import torch
 
 from hydra import initialize, compose
 from scipy.io import loadmat
@@ -216,8 +217,8 @@ class CarConnectionTransform(TransformOperator):
                 brand, model, year = file.split('_')[:3]
                 caption = ' '.join([brand, model, year])
                 fpath = os.path.join("data", file)
-                if self.is_car_image(os.path.join(self.input_dir, fpath)):
-                    df_dicts.append({'fpath': fpath, 'caption': caption})
+                #if self.is_car_image(os.path.join(self.input_dir, fpath)):
+                df_dicts.append({'fpath': fpath, 'caption': caption})
         return pd.DataFrame(df_dicts)
 
 

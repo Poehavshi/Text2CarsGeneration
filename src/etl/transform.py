@@ -4,14 +4,14 @@ Module to transform images (resizing, filtering, synthesis images creation)
 import logging
 import os
 from abc import ABC, abstractmethod
-from tqdm import tqdm
-from torchvision.io import read_image
-from torchvision.models import resnet50, ResNet50_Weights
-import torch
 
-from hydra import initialize, compose
-from scipy.io import loadmat
 import pandas as pd
+import torch
+from hydra import compose, initialize
+from scipy.io import loadmat
+from torchvision.io import read_image
+from torchvision.models import ResNet50_Weights, resnet50
+from tqdm import tqdm
 
 log = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class StanfordTransform(TransformOperator):
 
     def transform_meta(self):
         meta_df = self.read_meta_information()
-        meta_df.drop('class_index', inplace=True, axis=1)
+        meta_df.drop("class_index", inplace=True, axis=1)
         meta_df.rename(columns={"class_name": "caption"}, inplace=True)
         meta_df.to_csv(os.path.join(self.input_dir, "normalized_meta.csv"), index=False)
 
@@ -53,8 +53,8 @@ class StanfordTransform(TransformOperator):
 
     def read_meta_information(self):
         meta_array = loadmat(os.path.join(self.input_dir, StanfordTransform.META_FILE))
-        annotations = self._parse_annotations(meta_array['annotations'])
-        class_names = self._parse_class_names(meta_array['class_names'])
+        annotations = self._parse_annotations(meta_array["annotations"])
+        class_names = self._parse_class_names(meta_array["class_names"])
 
         meta_df = pd.merge(annotations, class_names, on="class_index")
         return meta_df
@@ -74,8 +74,7 @@ class StanfordTransform(TransformOperator):
         for annotation in annotations:
             fpath = str(annotation[0][0])
             class_index = int(annotation[5][0][0])
-            annotations_dicts.append({"class_index": class_index,
-                                      "fpath": fpath})
+            annotations_dicts.append({"class_index": class_index, "fpath": fpath})
         return pd.DataFrame(annotations_dicts)
 
 
@@ -91,8 +90,8 @@ class CompCarsTransform(TransformOperator):
 
     def transform_meta_for_data(self):
         make_model_names = loadmat(os.path.join(self.input_dir, "data/misc/make_model_name.mat"))
-        make_names_mapping = self._read_mapping_for_data(make_model_names['make_names'])
-        model_names_mapping = self._read_mapping_for_data(make_model_names['model_names'])
+        make_names_mapping = self._read_mapping_for_data(make_model_names["make_names"])
+        model_names_mapping = self._read_mapping_for_data(make_model_names["model_names"])
 
         meta_df = self.create_meta_df_for_data(make_names_mapping, model_names_mapping)
 
@@ -105,7 +104,7 @@ class CompCarsTransform(TransformOperator):
             if len(class_name[0]):
                 mapping[index + 1] = class_name[0][0]
             else:
-                mapping[index + 1] = ''
+                mapping[index + 1] = ""
         return mapping
 
     def create_meta_df_for_data(self, make_names_mapping, model_names_mapping) -> pd.DataFrame:
@@ -113,19 +112,19 @@ class CompCarsTransform(TransformOperator):
         # todo add information about viewpoint (from label directory)
         img_dir = os.path.join(self.input_dir, "data/image")
         df_dicts = []
-        for root, subdirectories, files in os.walk(img_dir):
+        for root, _subdirectories, files in os.walk(img_dir):
             for file in files:
-                img_dir, make_id, model_id, year = root.split('\\')[-4:]
-                img_dir = img_dir.replace('/', '\\')
+                img_dir, make_id, model_id, year = root.split("\\")[-4:]
+                img_dir = img_dir.replace("/", "\\")
                 fpath = os.path.join(img_dir, make_id, model_id, year, file)
 
                 brand = make_names_mapping[int(make_id)].strip()
-                model = model_names_mapping[int(model_id)].replace(brand, '').strip()
+                model = model_names_mapping[int(model_id)].replace(brand, "").strip()
                 year = year.strip()
 
-                caption = ' '.join([brand, model, year])
+                caption = " ".join([brand, model, year])
 
-                df_dicts.append({'fpath': fpath, 'caption': caption})
+                df_dicts.append({"fpath": fpath, "caption": caption})
 
         return pd.DataFrame(df_dicts)
 
@@ -134,24 +133,24 @@ class CompCarsTransform(TransformOperator):
         # TODO add information about front view
         img_dir = os.path.join(self.input_dir, "sv_data/image")
         df_dicts = []
-        for root, subdirectories, files in os.walk(img_dir):
+        for root, _subdirectories, files in os.walk(img_dir):
             for file in files:
-                img_dir, model_id = root.split('\\')[-2:]
-                img_dir = img_dir.replace('/', '\\')
+                img_dir, model_id = root.split("\\")[-2:]
+                img_dir = img_dir.replace("/", "\\")
 
                 fpath = os.path.join(img_dir, model_id, file)
                 model = model_names_mapping[int(model_id)]
-                df_dicts.append({'fpath': fpath, 'caption': model})
+                df_dicts.append({"fpath": fpath, "caption": model})
         return pd.DataFrame(df_dicts)
 
     def read_mapping_for_sv_data(self):
-        make_model_names = loadmat(os.path.join(self.input_dir, "sv_data/sv_make_model_name.mat"))['sv_make_model_name']
+        make_model_names = loadmat(os.path.join(self.input_dir, "sv_data/sv_make_model_name.mat"))["sv_make_model_name"]
         mapping = {}
         for index, make_model_name in enumerate(make_model_names):
             brand = make_model_name[0][0].strip()
-            model_name = make_model_name[1][0].replace(brand, '').strip()
+            model_name = make_model_name[1][0].replace(brand, "").strip()
             class_index = index + 1
-            mapping[class_index] = ' '.join([brand, model_name])
+            mapping[class_index] = " ".join([brand, model_name])
         return mapping
 
     def transform_meta_for_sv_data(self):
@@ -161,7 +160,6 @@ class CompCarsTransform(TransformOperator):
 
 
 class DVMCarTransform(TransformOperator):
-
     def do(self):
         meta_df = self.create_meta_df()
         print(meta_df)
@@ -169,13 +167,13 @@ class DVMCarTransform(TransformOperator):
 
     def create_meta_df(self):
         df_dicts = []
-        for root, subdirectories, files in tqdm(os.walk(self.input_dir), "Processing DVM file structure"):
+        for root, _subdirectories, files in tqdm(os.walk(self.input_dir), "Processing DVM file structure"):
             for file in files:
-                if file != 'normalized_meta.csv':
-                    brand, model, year, color = root.split('\\')[-4:]
-                    caption = ' '.join([color, brand, model, year])
+                if file != "normalized_meta.csv":
+                    brand, model, year, color = root.split("\\")[-4:]
+                    caption = " ".join([color, brand, model, year])
                     fpath = os.path.join(brand, model, year, color, file)
-                    df_dicts.append({'fpath': fpath, 'caption': caption})
+                    df_dicts.append({"fpath": fpath, "caption": caption})
         return pd.DataFrame(df_dicts)
 
 
@@ -212,13 +210,13 @@ class CarConnectionTransform(TransformOperator):
     def create_meta_df(self):
         df_dicts = []
         img_dir = os.path.join(self.input_dir, "data")
-        for root, subdirectories, files in tqdm(os.walk(img_dir), "Processing CarConnection file structure"):
+        for _root, _subdirectories, files in tqdm(os.walk(img_dir), "Processing CarConnection file structure"):
             for file in files:
-                brand, model, year = file.split('_')[:3]
-                caption = ' '.join([brand, model, year])
+                brand, model, year = file.split("_")[:3]
+                caption = " ".join([brand, model, year])
                 fpath = os.path.join("data", file)
-                #if self.is_car_image(os.path.join(self.input_dir, fpath)):
-                df_dicts.append({'fpath': fpath, 'caption': caption})
+                # if self.is_car_image(os.path.join(self.input_dir, fpath)):
+                df_dicts.append({"fpath": fpath, "caption": caption})
         return pd.DataFrame(df_dicts)
 
 
@@ -226,10 +224,10 @@ TRANSFORM_OPERATOR_INJECTOR = {
     "stanford": StanfordTransform,
     "compcars": CompCarsTransform,
     "resized_DVM": DVMCarTransform,
-    "carconnection": CarConnectionTransform
+    "carconnection": CarConnectionTransform,
 }
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     initialize(config_path=r"..\..\conf", job_name="carconnection_transform", version_base=None)
     cfg = compose(config_name="carconnection")
     root_input_dir = cfg.raw_data_root
@@ -237,7 +235,5 @@ if __name__ == '__main__':
         dataset_name = cfg.datasets[dataset].name
         dataset_input_dir = os.path.join(root_input_dir, dataset_name)
 
-        transform_operator = TRANSFORM_OPERATOR_INJECTOR[dataset_name](
-            dataset_input_dir
-        )
+        transform_operator = TRANSFORM_OPERATOR_INJECTOR[dataset_name](dataset_input_dir)
         transform_operator.do()

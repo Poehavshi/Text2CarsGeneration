@@ -1,11 +1,17 @@
+"""
+Methods to download files
+"""
 import logging
 import os
 from abc import ABC, abstractmethod
-from typing import List
-from torchvision.datasets.utils import download_url, download_and_extract_archive, download_file_from_google_drive, \
-    extract_archive
-from hydra import initialize, compose
-import zipfile
+
+from hydra import compose, initialize
+from torchvision.datasets.utils import (
+    download_and_extract_archive,
+    download_file_from_google_drive,
+    download_url,
+    extract_archive,
+)
 
 log = logging.getLogger(__name__)
 
@@ -19,9 +25,7 @@ class ExtractOperator(ABC):
     Second type is parser from some website
     """
 
-    def __init__(self,
-                 dataset_config,
-                 output_directory: str):
+    def __init__(self, dataset_config, output_directory: str):
         self.input_urls = dataset_config.urls
         self.output_dir = output_directory
 
@@ -52,7 +56,7 @@ class DownloadGoogleDriveOperator(ExtractOperator):
         self.filenames = dataset_config.filenames
 
     def do(self):
-        for url, filename in zip(self.input_urls, self.filenames):
+        for url, filename in zip(self.input_urls, self.filenames, strict=False):
             self.download_file(url, filename)
 
     def download_file(self, url, filename):
@@ -67,11 +71,11 @@ EXTRACT_OPERATOR_INJECTOR = {
     "compcars": DownloadGoogleDriveOperator,
     "stanford": DownloadUrlOperator,
     "resized_DVM": DownloadUrlOperator,
-    "carconnection": DownloadGoogleDriveOperator
+    "carconnection": DownloadGoogleDriveOperator,
 }
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     initialize(config_path=r"..\..\conf", job_name="carconnection_extract", version_base=None)
     cfg = compose(config_name="carconnection")
     root_path = cfg.raw_data_root
@@ -79,8 +83,5 @@ if __name__ == '__main__':
         dataset_name = cfg.datasets[dataset].name
         dataset_path = os.path.join(root_path, dataset_name)
 
-        extract_operator = EXTRACT_OPERATOR_INJECTOR[dataset_name](
-            cfg.datasets[dataset],
-            dataset_path
-        )
+        extract_operator = EXTRACT_OPERATOR_INJECTOR[dataset_name](cfg.datasets[dataset], dataset_path)
         extract_operator.do()

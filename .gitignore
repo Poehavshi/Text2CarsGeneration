@@ -7,3 +7,4 @@ RawDatasetsPreprocessing/DVM/*
 /outputs/
 /tmp/
 /.ruff_cache/
+/data/

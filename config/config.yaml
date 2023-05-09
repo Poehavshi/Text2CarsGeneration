@@ -5,7 +5,7 @@ meta_data_path: "${root_dir}/data/1_meta"
 
 datasets:
   stanford_cars:
-    urls: ["https://www.kaggle.com/datasets/jessicali9530/stanford-cars-dataset/download?datasetVersionNumber=2"]
+    urls: ["https://www.kaggle.com/datasets/jutrera/stanford-car-dataset-by-classes-folder"]
     google_drive_ids: {}
   car_connection:
     urls: []
@@ -18,5 +18,8 @@ datasets:
 
 meta_infos:
   stanford_cars:
-    annotations_path: "${raw_data_path}/stanford_cars/cars_train_annos.mat"
+    annotations_path: "${raw_data_path}/stanford_cars"
     output_annotations_path: "${meta_data_path}/stanford_cars.csv"
+  comp_cars:
+    annotations_path: "${raw_data_path}/comp_cars"
+    output_annotations_path: "${meta_data_path}/comp_cars.csv"

@@ -31,7 +31,7 @@ class MergeMetaInformation(luigi.Task):
             meta.append(df)
         return pd.concat(meta)
 
-    def leave_only_k_for_each_class(self, meta_info, k=5):
+    def leave_only_k_for_each_class(self, meta_info, k=3):
         meta_info = meta_info.groupby("class").head(k)
         return meta_info
 

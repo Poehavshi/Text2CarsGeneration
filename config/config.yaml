@@ -23,3 +23,6 @@ meta_infos:
   comp_cars:
     annotations_path: "${raw_data_path}/comp_cars"
     output_annotations_path: "${meta_data_path}/comp_cars.csv"
+  car_connection:
+    annotations_path: "${raw_data_path}/car_connection"
+    output_annotations_path: "${meta_data_path}/car_connection.csv"

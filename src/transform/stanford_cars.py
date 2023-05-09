@@ -2,7 +2,6 @@ import os.path
 
 import luigi
 import pandas as pd
-from scipy.io.matlab import loadmat
 
 from src.dependencies.extract_dag import extract_tasks
 
@@ -38,4 +37,3 @@ class StanfordCarsProcessing(luigi.Task):
                 file_path = os.path.join(class_dir_path, file)
                 meta.append([file_path, class_dir])
         return pd.DataFrame(meta, columns=["path", "class"])
-

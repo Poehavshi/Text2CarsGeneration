@@ -1,0 +1,16 @@
+# Here all datasets properties and other things
+root_dir: ".."
+raw_data_path: "${root_dir}/data/0_raw"
+
+datasets:
+  stanford_cars:
+    urls: ["https://www.kaggle.com/datasets/jessicali9530/stanford-cars-dataset/download?datasetVersionNumber=2"]
+    google_drive_ids: {}
+  car_connection:
+    urls: []
+    google_drive_ids: {
+      "https://drive.google.com/open?id=1TQQuT60bddyeGBVfwNOk6nxYavxQdZJD": "carconnection.rar"
+    }
+  comp_cars:
+    urls: ["https://www.kaggle.com/datasets/renancostaalencar/compcars/download?datasetVersionNumber=1"]
+    google_drive_ids: {}

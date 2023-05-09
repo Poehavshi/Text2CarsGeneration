@@ -3,6 +3,7 @@ Steps to download all necessary files
 """
 
 import os
+
 import gdown
 import luigi
 from torchvision.datasets.utils import (
@@ -45,4 +46,3 @@ class ExtractRawDataset(luigi.Task):
 
 def _is_archive(url):
     return url.endswith(".tgz") or url.endswith(".tar.gz") or url.endswith(".rar")
-

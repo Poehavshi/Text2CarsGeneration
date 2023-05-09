@@ -1,6 +1,7 @@
 # Here all datasets properties and other things
 root_dir: ".."
 raw_data_path: "${root_dir}/data/0_raw"
+meta_data_path: "${root_dir}/data/1_meta"
 
 datasets:
   stanford_cars:
@@ -14,3 +15,8 @@ datasets:
   comp_cars:
     urls: ["https://www.kaggle.com/datasets/renancostaalencar/compcars/download?datasetVersionNumber=1"]
     google_drive_ids: {}
+
+meta_infos:
+  stanford_cars:
+    annotations_path: "${raw_data_path}/stanford_cars/cars_train_annos.mat"
+    output_annotations_path: "${meta_data_path}/stanford_cars.csv"

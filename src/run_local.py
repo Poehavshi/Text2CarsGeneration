@@ -1,6 +1,6 @@
 import luigi
 
-from src.dependencies.dag import tasks
+from src.dependencies.transform_dag import tasks
 
 
 def run() -> None:
